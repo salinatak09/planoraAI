@@ -1,4 +1,14 @@
 import { z } from "zod";
+import { ObjectId } from "mongodb";
+
+/**
+ * Validates that a string is a 24-character hexadecimal MongoDB ObjectId string.
+ */
+export const objectIdSchema = z
+  .string()
+  .refine((val) => ObjectId.isValid(val) && new ObjectId(val).toString() === val, {
+    message: "Invalid MongoDB ObjectId format (must be 24-char hex string)",
+  });
 
 export const eventTypeSchema = z.enum(["wedding", "birthday", "anniversary", "community"], {
   message: "Event type must be wedding, birthday, anniversary, or community",
@@ -26,7 +36,151 @@ export const vendorCategorySchema = z.enum([
 ]);
 
 export const vendorStatusSchema = z.enum(["contacted", "shortlisted", "booked", "declined"]);
+export const paymentStatusSchema = z.enum(["unpaid", "deposit_paid", "paid"]);
+export const priceRangeSchema = z.enum(["$", "$$", "$$$", "$$$$"]);
+export const verificationStatusSchema = z.enum(["verified", "unverified", "preferred"]);
+export const bookingStatusSchema = z.enum(["inquiry", "quoted", "shortlisted", "booked", "declined"]);
+export const messageRoleSchema = z.enum(["user", "assistant", "system"]);
+export const ideaCategorySchema = z.enum(["theme", "decor", "activity", "menu", "logistics"]);
 
+/**
+ * 1. User Validation Schema
+ */
+export const userSchema = z.object({
+  displayName: z.string().trim().min(2, "Display name must be at least 2 characters").max(100),
+  email: z.string().trim().email("Invalid email address"),
+  authProvider: z.enum(["credentials", "google", "github"]).default("credentials"),
+  preferences: z
+    .object({
+      defaultCurrency: z.string().default("₹"),
+      timezone: z.string().default("Asia/Kolkata"),
+      notifications: z.boolean().default(true),
+    })
+    .passthrough()
+    .default({
+      defaultCurrency: "₹",
+      timezone: "Asia/Kolkata",
+      notifications: true,
+    }),
+  createdAt: z.date().optional(),
+});
+
+/**
+ * 2. Event Model Schema
+ */
+export const eventModelSchema = z.object({
+  ownerId: objectIdSchema,
+  title: z.string().trim().min(3, "Title must be at least 3 characters").max(100),
+  type: eventTypeSchema,
+  date: z.string().min(4, "Event date is required"),
+  timezone: z.string().default("UTC"),
+  location: z.string().trim().min(2, "Location is required").max(150),
+  guestCount: z.number().int().min(1, "Guest count must be at least 1").max(50000),
+  currency: z.string().default("₹"),
+  totalBudget: z.number().min(0, "Budget must be positive or zero"),
+  theme: z.string().trim().min(2, "Theme is required").max(100),
+  preferences: z
+    .object({
+      splurgePriority: z.string().optional(),
+      specialRequirements: z.array(z.string()).optional(),
+    })
+    .passthrough()
+    .default({}),
+  status: eventStatusSchema.default("planning"),
+});
+
+/**
+ * 3. BudgetItem Validation Schema
+ */
+export const budgetItemSchema = z.object({
+  eventId: objectIdSchema,
+  ownerId: objectIdSchema,
+  category: z.string().trim().min(2, "Category is required").max(80),
+  description: z.string().trim().min(2, "Description must be at least 2 characters").max(200),
+  estimatedAmount: z.number().min(0, "Estimated amount cannot be negative"),
+  actualAmount: z.number().min(0, "Actual amount cannot be negative"),
+  paymentStatus: paymentStatusSchema.default("unpaid"),
+});
+
+/**
+ * 4. Task Validation Schema
+ */
+export const taskModelSchema = z.object({
+  eventId: objectIdSchema,
+  ownerId: objectIdSchema,
+  title: z.string().trim().min(2, "Task title must be at least 2 characters").max(120),
+  description: z.string().max(500).optional(),
+  dueDate: z.string().min(1, "Due date is required"),
+  priority: taskPrioritySchema.default("medium"),
+  status: taskStatusSchema.default("pending"),
+  assignedTo: z.string().max(100).optional(),
+});
+
+/**
+ * 5. Vendor Validation Schema
+ */
+export const vendorModelSchema = z.object({
+  ownerId: objectIdSchema.nullable().optional(),
+  isShared: z.boolean().default(false),
+  name: z.string().trim().min(2, "Vendor name must be at least 2 characters").max(100),
+  category: vendorCategorySchema,
+  location: z.string().trim().min(2, "Location is required").max(150),
+  contact: z
+    .object({
+      name: z.string().max(100).optional(),
+      email: z.string().email().optional().or(z.literal("")),
+      phone: z.string().max(30).optional(),
+      website: z.string().url().optional().or(z.literal("")),
+    })
+    .default({}),
+  priceRange: priceRangeSchema.default("$$"),
+  verificationStatus: verificationStatusSchema.default("unverified"),
+});
+
+/**
+ * 6. EventVendor Contract Validation Schema
+ */
+export const eventVendorModelSchema = z.object({
+  eventId: objectIdSchema,
+  vendorId: objectIdSchema,
+  ownerId: objectIdSchema,
+  quotedAmount: z.number().min(0, "Quoted amount cannot be negative"),
+  bookingStatus: bookingStatusSchema.default("inquiry"),
+  notes: z.string().max(1000).optional(),
+});
+
+/**
+ * 7. Idea Validation Schema
+ */
+export const ideaModelSchema = z.object({
+  eventId: objectIdSchema,
+  ownerId: objectIdSchema,
+  category: ideaCategorySchema,
+  title: z.string().trim().min(2, "Title must be at least 2 characters").max(150),
+  description: z.string().trim().min(10, "Description must be at least 10 characters").max(1000),
+  estimatedCost: z.string().max(80).optional(),
+});
+
+/**
+ * 8. ConversationMessage Validation Schema
+ */
+export const conversationMessageSchema = z.object({
+  eventId: objectIdSchema,
+  ownerId: objectIdSchema,
+  role: messageRoleSchema,
+  content: z.string().trim().min(1, "Message content cannot be empty").max(4000),
+  createdAt: z.date().optional(),
+});
+
+/**
+ * Pagination Query Validation Schema
+ */
+export const paginationQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+// Original API input schemas
 export const eventTaskSchema = z.object({
   id: z.string().min(1, "Task ID is required"),
   title: z.string().min(2, "Task title must be at least 2 characters").max(120),

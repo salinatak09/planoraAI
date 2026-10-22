@@ -1,3 +1,4 @@
+export * from "./models";
 export type EventType = "wedding" | "birthday" | "anniversary" | "community";
 
 export type EventStatus = "planning" | "confirmed" | "in_progress" | "completed" | "cancelled";

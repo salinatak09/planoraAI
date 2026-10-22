@@ -10,8 +10,8 @@ Planora AI is an intelligent, full-stack event planning application built for or
 |---|---|
 | **Framework** | [Next.js](https://nextjs.org/) (App Router, Server & Client Components) |
 | **Language** | [TypeScript](https://www.typescriptlang.org/) (Strict Mode) |
-| **Styling & Tokens** | [Tailwind CSS](https://tailwindcss.com/) (v4 with Custom Color Tokens) |
-| **Database** | [MongoDB Atlas](https://www.mongodb.com/atlas) with official Node.js Driver |
+| **Styling & Tokens** | [Tailwind CSS](https://tailwindcss.com/) (Google Stitch Design Tokens) |
+| **Database** | [MongoDB Atlas](https://www.mongodb.com/atlas) with official Node.js Driver (`mongodb`) |
 | **GenAI SDK** | [Google Gemini](https://ai.google.dev/) via official `@google/genai` TypeScript SDK |
 | **Validation** | [Zod](https://zod.dev/) runtime schema validation |
 | **Data Visualization** | [Recharts](https://recharts.org/) |
@@ -21,57 +21,42 @@ Planora AI is an intelligent, full-stack event planning application built for or
 
 ---
 
-## 📁 Architecture & File Structure
+## 🗄️ MongoDB Atlas Data Layer Architecture
 
-```text
-├── src/
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── ai/ideas/route.ts      # Gemini GenAI ideation endpoint
-│   │   │   ├── events/route.ts        # Scoped event queries & creation
-│   │   │   └── health/route.ts        # System diagnostic & connection health
-│   │   ├── error.tsx                  # Global error boundary state
-│   │   ├── globals.css                # Design tokens & color scales
-│   │   ├── layout.tsx                 # Root layout with fonts & metadata
-│   │   ├── loading.tsx                # Instant skeleton loading state
-│   │   ├── not-found.tsx              # Custom 404 state
-│   │   └── page.tsx                   # Server Component orchestrating dashboard
-│   ├── components/
-│   │   ├── dashboard/
-│   │   │   └── DashboardClient.tsx    # Interactive dashboard with Recharts & AI studio
-│   │   ├── layout/
-│   │   │   ├── AppHeader.tsx          # Top navigation & user profile
-│   │   │   └── Sidebar.tsx            # Responsive suite navigation
-│   │   └── ui/
-│   │       ├── Badge.tsx              # Event type, status & priority badges
-│   │       ├── Button.tsx             # Accessible button with states & loaders
-│   │       ├── Card.tsx               # Composite card primitive
-│   │       ├── EmptyState.tsx         # Standardized empty states
-│   │       └── Input.tsx              # Accessible form input with validation errors
-│   ├── lib/
-│   │   ├── ai/
-│   │   │   └── gemini.ts              # Official @google/genai client with fallbacks
-│   │   ├── auth/
-│   │   │   └── session.ts             # Server-side authentication & user scoping
-│   │   ├── db/
-│   │   │   ├── client.ts              # MongoDB Atlas connection reuse for serverless & HMR
-│   │   │   └── collections.ts         # Strongly-typed collections
-│   │   ├── types/
-│   │   │   └── index.ts               # Domain TypeScript interfaces & DTOs
-│   │   ├── utils/
-│   │   │   ├── currency.ts            # Currency and budget metrics calculations
-│   │   │   ├── date.ts                # Date formatting & countdown helpers
-│   │   │   └── response.ts            # Standardized API response utilities
-│   │   └── validation/
-│   │       └── schemas.ts             # Zod runtime schemas
-│   └── tests/
-│       ├── budget-calculator.test.ts  # Financial logic unit tests
-│       └── validation.test.ts         # Zod contract verification tests
-├── .env.example                       # Environment variable template
-├── package.json
-├── tsconfig.json
-└── vitest.config.mts                  # Vitest runner configuration
-```
+The data layer is implemented in [`src/lib/mongodb.ts`](src/lib/mongodb.ts) using the official `mongodb` Node.js driver.
+
+### Connection Reuse & Safety
+- **Development**: Caches the client connection promise on `globalThis._mongoClientPromise` to prevent connection socket exhaustion during Next.js Hot Module Replacement (HMR).
+- **Serverless / Production**: Reuses the module-scoped client promise across serverless function executions.
+- **Fail-Safe Configuration**: Throws a descriptive configuration error when `MONGODB_URI` is missing without leaking credentials or URLs.
+- **Secret Isolation**: `MONGODB_URI` and `MONGODB_DB` are only read on the server. Credentials are never sent in API responses or bundled into client code.
+
+### Data Models & Zod Schemas
+Located in [`src/lib/types/models.ts`](src/lib/types/models.ts) and [`src/lib/validation/schemas.ts`](src/lib/validation/schemas.ts):
+
+1. **User**: `displayName`, `email`, `authProvider`, `preferences`, `createdAt`.
+2. **Event**: `ownerId`, `title`, `type`, `date`, `timezone`, `location`, `guestCount`, `currency`, `totalBudget`, `theme`, `preferences`, `status`, `createdAt`, `updatedAt`.
+3. **BudgetItem**: `eventId`, `ownerId`, `category`, `description`, `estimatedAmount`, `actualAmount`, `paymentStatus`.
+4. **Task**: `eventId`, `ownerId`, `title`, `description`, `dueDate`, `priority`, `status`, `assignedTo`.
+5. **Vendor**: `ownerId` (or null for shared directory scope), `isShared`, `name`, `category`, `location`, `contact`, `priceRange`, `verificationStatus`.
+6. **EventVendor**: `eventId`, `vendorId`, `ownerId`, `quotedAmount`, `bookingStatus`, `notes`.
+7. **Idea**: `eventId`, `ownerId`, `category`, `title`, `description`, `estimatedCost`.
+8. **ConversationMessage**: `eventId`, `ownerId`, `role`, `content`, `createdAt`.
+
+### Data Integrity & Ownership Enforcement
+- **Session-Derived Ownership**: Ownership is extracted strictly from the authenticated server-side session, never from client payload fields (`src/lib/db/services.ts`).
+- **Child Record Guard**: `verifyEventOwnership(eventId, ownerId)` strictly checks that the current user owns the parent event before reading, creating, or modifying any child records (`BudgetItem`, `Task`, `EventVendor`, `Idea`, `ConversationMessage`).
+- **ObjectId Serialization**: All ObjectIds and Dates are safely converted to ISO strings at API boundaries using [`src/lib/utils/objectid.ts`](src/lib/utils/objectid.ts).
+- **Pagination**: Paginated endpoints limit results with safety caps (max 100 items per page) using [`src/lib/utils/pagination.ts`](src/lib/utils/pagination.ts).
+- **Automated Indexes**: [`ensureDatabaseIndexes()`](src/lib/db/collections.ts) establishes indexes for:
+  - `users.email` (unique)
+  - `events.ownerId + createdAt`, `events.status`, `events.date`
+  - `budget_items.eventId + ownerId`, `budget_items.category`
+  - `tasks.eventId + ownerId`, `tasks.eventId + dueDate`, `tasks.priority + status`
+  - `vendors.isShared + category`, `vendors.ownerId`
+  - `event_vendors.eventId + vendorId` (unique), `event_vendors.eventId + ownerId`
+  - `ideas.eventId + ownerId`, `ideas.category`
+  - `conversation_messages.eventId + ownerId + createdAt`
 
 ---
 
@@ -80,27 +65,23 @@ Planora AI is an intelligent, full-stack event planning application built for or
 ### 1. Prerequisites
 - **Node.js**: v20+ (Tested on Node.js v26)
 - **npm**: v10+
+- **MongoDB Atlas Cluster**: (Free Tier M0 or higher)
 
-### 2. Clone and Install Dependencies
-```bash
-git clone https://github.com/<your-org>/planora-ai.git
-cd planora-ai
-npm install
-```
-
-### 3. Environment Variables
+### 2. Environment Setup
 Copy `.env.example` to `.env.local`:
 ```bash
 cp .env.example .env.local
 ```
 
-Populate the required credentials in `.env.local`:
+Configure your secrets in `.env.local`:
 ```env
 # MongoDB Atlas Connection String
 MONGODB_URI="mongodb+srv://<username>:<password>@<cluster-url>/?retryWrites=true&w=majority"
-MONGODB_DB_NAME="planora_ai"
 
-# Google Gemini API Key (@google/genai SDK)
+# Target Database Name
+MONGODB_DB="planora_ai"
+
+# Google Gemini API Key
 GEMINI_API_KEY="AIzaSy..."
 
 # Application URL
@@ -108,9 +89,9 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NODE_ENV="development"
 ```
 
-> **Note**: If `MONGODB_URI` or `GEMINI_API_KEY` are not yet set during local development, Planora AI will smoothly fall back to high-fidelity mock event data and responsive curated idea seeds.
+> **Note**: If `MONGODB_URI` is not configured during local development, the application safely informs the user on the health endpoint without exposing any secrets, while the UI continues to function smoothly in demo mode.
 
-### 4. Running the Development Server
+### 3. Running the Development Server
 ```bash
 npm run dev
 ```
@@ -118,38 +99,27 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ---
 
+## 🩺 Health Check Endpoints
+
+- **Overall Health**: `GET /api/health`
+  Returns system version, runtime status, and database connection state without leaking secrets.
+- **Database Ping**: `GET /api/health/db`
+  Performs an actual MongoDB `ping` command, returning round-trip latency (`latencyMs`) and database name. Returns HTTP 200 when connected, or HTTP 503 with sanitized error message when unavailable.
+
+---
+
 ## 🧪 Testing & Code Quality
 
 ```bash
-# Run unit & schema tests with Vitest
+# Run unit, schema, and ownership tests
 npm test
 
-# Run ESLint checks
+# Run ESLint validation
 npm run lint
 
-# Run TypeScript compilation check
+# Run strict TypeScript compiler verification
 npx tsc --noEmit
 
 # Run full Next.js production build
 npm run build
 ```
-
----
-
-## 🔒 Security & Data Scoping Principles
-1. **Server-Side Authorization**: Every database query is strictly scoped to `userId` resolved by the server session (`src/lib/auth/session.ts`). Client-supplied identity or permissions are never trusted.
-2. **Strict Validation**: All incoming payloads pass through `Zod` schemas before touching domain logic or database storage.
-3. **Secret Isolation**: `MONGODB_URI` and `GEMINI_API_KEY` are strictly read server-side in API routes and never bundled to the client.
-4. **Connection Caching**: MongoDB Atlas driver connection promises are cached across HMR cycles in development and reused across function invocations in serverless deployments.
-
----
-
-## 🚢 Deployment to Vercel
-
-1. Push your repository to GitHub.
-2. Import the project into the [Vercel Dashboard](https://vercel.com/).
-3. Add the environment variables:
-   - `MONGODB_URI`
-   - `MONGODB_DB_NAME`
-   - `GEMINI_API_KEY`
-4. Deploy. Vercel automatically detects Next.js App Router and provisions serverless edge functions for the API routes.
