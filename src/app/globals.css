@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+  --color-brand-950: #2e1065;
+
+  --color-champagne-50: #fffbeb;
+  --color-champagne-100: #fef3c7;
+  --color-champagne-200: #fde68a;
+  --color-champagne-500: #f59e0b;
+  --color-champagne-600: #d97706;
+
+  --color-surface-bg: var(--background);
+  --color-surface-card: var(--card-bg);
+  --color-surface-border: var(--border-color);
+}
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card-bg: #ffffff;
+  --border-color: #e2e8f0;
+  --muted-text: #64748b;
+  --accent-glow: rgba(124, 58, 237, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #090d16;
+    --foreground: #f1f5f9;
+    --card-bg: #111827;
+    --border-color: #1f2937;
+    --muted-text: #94a3b8;
+    --accent-glow: rgba(124, 58, 237, 0.15);
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  min-height: 100vh;
+}
+
+/* Custom scrollbar and accessibility outlines */
+* {
+  border-color: var(--border-color);
+}
+
+:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
