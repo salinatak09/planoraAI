@@ -1,0 +1,132 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Sparkles, ArrowRight, Mail, User, Building, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+
+export default function SignupPage() {
+  const router = useRouter();
+  const [name, setName] = React.useState("Priya Sharma");
+  const [agency, setAgency] = React.useState("Luxe Heritage Celebrations");
+  const [email, setEmail] = React.useState("priya@luxeheritage.com");
+  const [role, setRole] = React.useState("Luxury Destination Specialist");
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    setIsLoading(true);
+    setTimeout(() => {
+      router.push("/onboarding");
+    }, 600);
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-[#faf9f6] relative selection:bg-[#e5deff] selection:text-[#473698]">
+      {/* Background glow orbs */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[360px] bg-[#e5deff]/40 blur-[120px] rounded-full" />
+        <div className="absolute bottom-10 left-1/4 w-[380px] h-[300px] bg-[#c8ead9]/30 blur-[100px] rounded-full" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-lg">
+        {/* Brand header */}
+        <div className="text-center mb-6">
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-3 group">
+            <div className="w-10 h-10 rounded-xl bg-[#5a4bac] flex items-center justify-center text-white shadow-xs group-hover:bg-[#7364c7] transition-colors">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="font-heading font-extrabold text-xl text-[#5a4bac] tracking-tight">
+              Planora AI
+            </span>
+          </Link>
+          <h1 className="text-2xl font-heading font-extrabold text-[#181c23] tracking-tight">
+            Create Your Planner Account
+          </h1>
+          <p className="text-xs text-[#686e77] mt-1.5">
+            Join luxury curators, independent planners, and festival organizers.
+          </p>
+        </div>
+
+        {/* Signup Card */}
+        <div className="rounded-3xl border border-[#eae6df] bg-white p-7 sm:p-9 shadow-[0px_10px_35px_-4px_rgba(45,49,57,0.06)] backdrop-blur-sm">
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <Input
+                label="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                leftIcon={<User className="w-4 h-4" />}
+                required
+              />
+              <Input
+                label="Studio / Agency Name"
+                value={agency}
+                onChange={(e) => setAgency(e.target.value)}
+                leftIcon={<Building className="w-4 h-4" />}
+                required
+              />
+            </div>
+
+            <Input
+              label="Work Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="priya@studio.com"
+              leftIcon={<Mail className="w-4 h-4" />}
+              required
+            />
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-heading font-semibold text-[#181c23]">
+                Specialization
+              </label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="h-11 rounded-full border border-[#eae6df] bg-white px-4 text-xs text-[#181c23] focus:outline-none focus:ring-2 focus:ring-[#7364c7]/20 focus:border-[#5a4bac]"
+              >
+                <option value="Luxury Destination Specialist">Luxury Destination Specialist</option>
+                <option value="Wedding & Gala Producer">Wedding & Gala Producer</option>
+                <option value="Corporate & Milestone Event Lead">Corporate & Milestone Event Lead</option>
+                <option value="Community Festival Director">Community Festival Director</option>
+              </select>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-[#faf9f6] border border-[#eae6df] text-xs text-[#686e77] space-y-1">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#466557]" />
+                <span>Unlimited celebration drafts & AI suggestions</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#466557]" />
+                <span>Enterprise multi-currency and GST/tax tracking</span>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full mt-2"
+              size="lg"
+              isLoading={isLoading}
+              rightIcon={<ArrowRight className="w-4 h-4" />}
+            >
+              Continue to Onboarding Wizard
+            </Button>
+          </form>
+        </div>
+
+        {/* Login Redirect */}
+        <div className="text-center mt-6 text-xs text-[#686e77]">
+          Already have an account?{" "}
+          <Link href="/login" className="font-heading font-bold text-[#5a4bac] hover:underline">
+            Sign In to Studio
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-heading",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "Planora AI – GenAI-Powered Event Planning",
+  title: "Planora AI – Intelligent Event Planning & Celebration Studio",
   description:
-    "Intelligently plan and manage weddings, birthdays, anniversaries, and community gatherings with AI-driven timelines, budgets, and inspiration.",
+    "Luxury and community event planning powered by generative AI. Bespoke timelines, live budget intelligence, vendor curation, and creative studio.",
 };
 
 export default function RootLayout({
@@ -26,9 +28,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
+      <body className="min-h-full flex flex-col font-body bg-[#FAF9F6] text-[#181c23]">
         {children}
       </body>
     </html>

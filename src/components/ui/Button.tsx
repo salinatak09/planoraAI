@@ -2,7 +2,7 @@ import * as React from "react";
 import { Loader2 } from "lucide-react";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  variant?: "primary" | "soft" | "outline" | "ghost" | "danger" | "sage";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -25,19 +25,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+      "inline-flex items-center justify-center font-heading font-semibold rounded-full transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer active:scale-[0.98]";
 
     const variantStyles = {
       primary:
-        "bg-purple-600 text-white hover:bg-purple-700 shadow-sm active:bg-purple-800 focus-visible:ring-purple-500",
-      secondary:
-        "bg-purple-100 text-purple-900 hover:bg-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:hover:bg-purple-900/60",
+        "bg-[#5a4bac] text-white hover:bg-[#7364c7] shadow-sm focus-visible:ring-[#7364c7]",
+      soft:
+        "bg-[#ede9fe] text-[#5a4bac] hover:bg-[#e5deff] focus-visible:ring-[#7364c7]",
+      sage:
+        "bg-[#466557] text-white hover:bg-[#385347] shadow-sm focus-visible:ring-[#466557]",
       outline:
-        "border border-slate-300 bg-transparent text-slate-800 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800",
+        "border border-[#eae6df] bg-[#ffffff] text-[#181c23] hover:bg-[#f5f4f0] shadow-xs",
       ghost:
-        "bg-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800",
+        "bg-transparent text-[#484552] hover:bg-[#f5f4f0] hover:text-[#181c23]",
       danger:
-        "bg-rose-600 text-white hover:bg-rose-700 shadow-sm active:bg-rose-800 focus-visible:ring-rose-500",
+        "bg-[#ba1a1a] text-white hover:bg-[#9a1515] shadow-sm focus-visible:ring-[#ba1a1a]",
     };
 
     const sizeStyles = {

@@ -1,9 +1,13 @@
 import * as React from "react";
+import { Sparkles } from "lucide-react";
 import type { EventType, EventStatus, TaskPriority } from "@/lib/types";
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?:
     | "default"
+    | "ai"
+    | "sage"
+    | "peach"
     | "wedding"
     | "birthday"
     | "anniversary"
@@ -23,32 +27,28 @@ export function Badge({
   ...props
 }: BadgeProps) {
   const variantStyles = {
-    default: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
-    wedding:
-      "bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800/50",
-    birthday:
-      "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/50",
-    anniversary:
-      "bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800/50",
-    community:
-      "bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/50",
-    success:
-      "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-    warning:
-      "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-    danger:
-      "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300",
-    info: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
+    default: "bg-[#f1f3fe] text-[#484552] border border-[#eae6df]",
+    ai: "bg-[#ede9fe] text-[#5a4bac] font-semibold",
+    sage: "bg-[#e8f0ec] text-[#466557] font-semibold",
+    peach: "bg-[#fde8d7] text-[#884a0f] font-semibold",
+    wedding: "bg-[#ede9fe] text-[#5a4bac] border border-[#dcd6cc]",
+    birthday: "bg-[#fde8d7] text-[#a66227] border border-[#ffdcc4]",
+    anniversary: "bg-[#ffdcc4] text-[#884a0f] border border-[#ffb780]",
+    community: "bg-[#e8f0ec] text-[#466557] border border-[#c8ead9]",
+    success: "bg-[#e8f0ec] text-[#466557]",
+    warning: "bg-[#fde8d7] text-[#884a0f]",
+    danger: "bg-[#ffdad6] text-[#ba1a1a]",
+    info: "bg-[#f1f3fe] text-[#5a4bac]",
   };
 
   const sizeStyles = {
-    sm: "px-2 py-0.5 text-[11px]",
-    md: "px-2.5 py-1 text-xs",
+    sm: "px-2.5 py-0.5 text-[11px]",
+    md: "px-3 py-1 text-xs",
   };
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`inline-flex items-center gap-1 font-heading font-medium rounded-full ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
       {...props}
     >
       {children}
@@ -56,15 +56,24 @@ export function Badge({
   );
 }
 
+export function AIBadge({ label = "Planora AI", className = "" }: { label?: string; className?: string }) {
+  return (
+    <Badge variant="ai" size="sm" className={className}>
+      <Sparkles className="w-3 h-3 text-[#5a4bac]" />
+      <span>{label}</span>
+    </Badge>
+  );
+}
+
 export function EventTypeBadge({ type }: { type: EventType }) {
   const labels: Record<EventType, string> = {
-    wedding: "Wedding",
-    birthday: "Birthday",
-    anniversary: "Anniversary",
-    community: "Community",
+    wedding: "Wedding Gala",
+    birthday: "Birthday Celebration",
+    anniversary: "Anniversary Jubilee",
+    community: "Community Gathering",
   };
 
-  return <Badge variant={type}>{labels[type]}</Badge>;
+  return <Badge variant={type}>{labels[type] || type}</Badge>;
 }
 
 export function EventStatusBadge({ status }: { status: EventStatus }) {
@@ -73,7 +82,7 @@ export function EventStatusBadge({ status }: { status: EventStatus }) {
     { label: string; variant: "default" | "success" | "warning" | "info" | "danger" }
   > = {
     planning: { label: "Planning", variant: "warning" },
-    confirmed: { label: "Confirmed", variant: "info" },
+    confirmed: { label: "Confirmed", variant: "success" },
     in_progress: { label: "In Progress", variant: "info" },
     completed: { label: "Completed", variant: "success" },
     cancelled: { label: "Cancelled", variant: "danger" },
@@ -89,7 +98,7 @@ export function TaskPriorityBadge({ priority }: { priority: TaskPriority }) {
     { label: string; variant: "default" | "success" | "warning" | "danger" | "info" }
   > = {
     low: { label: "Low", variant: "default" },
-    medium: { label: "Medium", variant: "info" as const },
+    medium: { label: "Medium", variant: "info" },
     high: { label: "High", variant: "warning" },
     urgent: { label: "Urgent", variant: "danger" },
   };
