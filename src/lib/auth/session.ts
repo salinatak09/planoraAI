@@ -1,35 +1,45 @@
-import { headers } from "next/headers";
+import { getSessionCookie } from "./cookies";
+import { verifySessionToken } from "./jwt";
 import type { UserSession } from "@/lib/types";
 
-// Default authorized user for the MVP development environment
-export const DEFAULT_USER: UserSession = {
-  userId: "usr_planora_demo_01",
-  email: "organizer@planora.ai",
-  name: "Alex Vance",
-  role: "organizer",
-};
+export class AuthenticationError extends Error {
+  constructor(message = "Unauthorized: A valid authenticated session is required") {
+    super(message);
+    this.name = "AuthenticationError";
+  }
+}
 
 /**
- * Resolves the authenticated user session strictly on the server.
- * Never trust client-supplied user IDs from the request body.
+ * Resolves the authenticated user session strictly on the server from the verified HTTP-only JWT cookie.
+ * Never trusts client assertions, request body fields, or unverified headers.
  */
-export async function getAuthenticatedUser(): Promise<UserSession> {
-  const reqHeaders = await headers();
-
-  // In production, extract user from validated JWT, NextAuth/Clerk session cookie, or bearer header
-  const customUserId = reqHeaders.get("x-planora-user-id");
-  const customEmail = reqHeaders.get("x-planora-user-email");
-  const customName = reqHeaders.get("x-planora-user-name");
-
-  if (customUserId && customUserId.trim().length > 0) {
-    return {
-      userId: customUserId.trim(),
-      email: customEmail?.trim() || "user@planora.ai",
-      name: customName?.trim() || "Event Host",
-      role: "organizer",
-    };
+export async function getAuthenticatedUser(): Promise<UserSession | null> {
+  const token = await getSessionCookie();
+  if (!token) {
+    return null;
   }
 
-  // Fallback to default demo user session for MVP development
-  return DEFAULT_USER;
+  const payload = await verifySessionToken(token);
+  if (!payload || !payload.userId) {
+    return null;
+  }
+
+  return {
+    userId: payload.userId,
+    email: payload.email,
+    name: payload.name || "Event Organizer",
+    role: payload.role || "organizer",
+  };
+}
+
+/**
+ * Requires an authenticated user session.
+ * Throws AuthenticationError if the session is missing, expired, or invalid.
+ */
+export async function requireAuthenticatedUser(): Promise<UserSession> {
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    throw new AuthenticationError();
+  }
+  return user;
 }

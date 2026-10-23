@@ -32,6 +32,7 @@ export interface UserModel {
   _id?: ObjectId;
   displayName: string;
   email: string;
+  passwordHash?: string;
   authProvider: AuthProvider;
   preferences: {
     defaultCurrency?: string;

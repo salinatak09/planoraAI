@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, ArrowRight, Mail, User, Building, CheckCircle2 } from "lucide-react";
+import { Sparkles, ArrowRight, Mail, User, Building, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
@@ -11,16 +11,49 @@ export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = React.useState("Priya Sharma");
   const [agency, setAgency] = React.useState("Luxe Heritage Celebrations");
-  const [email, setEmail] = React.useState("priya@luxeheritage.com");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [role, setRole] = React.useState("Luxury Destination Specialist");
   const [isLoading, setIsLoading] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  function handleSignup(e: React.FormEvent) {
+  async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
+    setErrorMessage(null);
+
+    if (password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters long.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          displayName: name,
+          email,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMessage(data?.error?.message || "Registration failed. Please check your details.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Successful registration & session creation - redirect to onboarding wizard
       router.push("/onboarding");
-    }, 600);
+      router.refresh();
+    } catch {
+      setErrorMessage("Network error during registration. Please try again.");
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -52,6 +85,13 @@ export default function SignupPage() {
 
         {/* Signup Card */}
         <div className="rounded-3xl border border-[#eae6df] bg-white p-7 sm:p-9 shadow-[0px_10px_35px_-4px_rgba(45,49,57,0.06)] backdrop-blur-sm">
+          {errorMessage && (
+            <div className="mb-5 p-3.5 rounded-2xl bg-[#ffdad6]/40 border border-[#ba1a1a]/20 flex items-start gap-2.5 text-xs text-[#93000a]">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#ba1a1a]" />
+              <div className="leading-relaxed font-medium">{errorMessage}</div>
+            </div>
+          )}
+
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <Input
@@ -78,6 +118,18 @@ export default function SignupPage() {
               placeholder="priya@studio.com"
               leftIcon={<Mail className="w-4 h-4" />}
               required
+              autoComplete="email"
+            />
+
+            <Input
+              label="Account Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Min. 6 characters"
+              leftIcon={<Lock className="w-4 h-4" />}
+              required
+              autoComplete="new-password"
             />
 
             <div className="flex flex-col gap-1.5">
@@ -99,11 +151,11 @@ export default function SignupPage() {
             <div className="p-3 rounded-2xl bg-[#faf9f6] border border-[#eae6df] text-xs text-[#686e77] space-y-1">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#466557]" />
-                <span>Unlimited celebration drafts & AI suggestions</span>
+                <span>Cryptographically secured session & MongoDB identity</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#466557]" />
-                <span>Enterprise multi-currency and GST/tax tracking</span>
+                <span>Unlimited celebration drafts & AI suggestions</span>
               </div>
             </div>
 
@@ -114,7 +166,7 @@ export default function SignupPage() {
               isLoading={isLoading}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Continue to Onboarding Wizard
+              Register & Launch Onboarding
             </Button>
           </form>
         </div>

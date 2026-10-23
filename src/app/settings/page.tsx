@@ -1,12 +1,15 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   User,
   Building,
   Sparkles,
   CheckCircle2,
   Save,
+  ShieldCheck,
+  LogOut,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +18,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [name, setName] = React.useState("Priya Sharma");
   const [email, setEmail] = React.useState("priya@planora.ai");
   const [studio, setStudio] = React.useState("Luxe Heritage Celebrations");
@@ -241,6 +245,42 @@ export default function SettingsPage() {
             </Button>
           </div>
         </form>
+
+        {/* Account Security & Session Management */}
+        <Card className="border-[#ffdad6]/60">
+          <CardHeader>
+            <div className="flex items-center gap-2 text-[#ba1a1a]">
+              <ShieldCheck className="w-5 h-5" />
+              <CardTitle className="text-base text-[#181c23]">Security & Session Management</CardTitle>
+            </div>
+            <CardDescription>
+              Manage your active authenticated session and credentials.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+            <div>
+              <p className="text-xs font-heading font-semibold text-[#181c23]">
+                Authenticated Studio Session
+              </p>
+              <p className="text-xs text-[#797583] mt-0.5">
+                Session token is securely stored in an HTTP-only, encrypted cookie with 7-day expiration.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="text-[#ba1a1a] border-[#ffdad6] hover:bg-[#ffdad6]/30 hover:border-[#ba1a1a]/30 shrink-0"
+              leftIcon={<LogOut className="w-4 h-4" />}
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" });
+                router.push("/login");
+                router.refresh();
+              }}
+            >
+              Sign Out of Studio
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </AppShell>
   );

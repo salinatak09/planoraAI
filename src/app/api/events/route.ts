@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth/session";
+import { requireAuthenticatedUser, AuthenticationError } from "@/lib/auth/session";
 import { createEventSchema } from "@/lib/validation/schemas";
-import { apiSuccess, apiValidationError, apiError } from "@/lib/utils/response";
+import { apiSuccess, apiValidationError, apiError, apiUnauthorized } from "@/lib/utils/response";
 import { getEventsCollection } from "@/lib/db/collections";
 import { parsePaginationParams, buildPaginatedResult } from "@/lib/utils/pagination";
 import { serializeDocument, serializeDocuments, toOptionalObjectId } from "@/lib/utils/objectid";
@@ -10,7 +10,16 @@ import type { EventModel } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getAuthenticatedUser();
+    let user;
+    try {
+      user = await requireAuthenticatedUser();
+    } catch (err: unknown) {
+      if (err instanceof AuthenticationError) {
+        return apiUnauthorized("You must be signed in to view events");
+      }
+      throw err;
+    }
+
     const pagination = parsePaginationParams(req.nextUrl.searchParams);
     const filterType = req.nextUrl.searchParams.get("type");
 
@@ -74,9 +83,17 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getAuthenticatedUser();
-    const body = await req.json();
+    let user;
+    try {
+      user = await requireAuthenticatedUser();
+    } catch (err: unknown) {
+      if (err instanceof AuthenticationError) {
+        return apiUnauthorized("You must be signed in to create an event");
+      }
+      throw err;
+    }
 
+    const body = await req.json();
     const parsed = createEventSchema.safeParse(body);
     if (!parsed.success) {
       return apiValidationError(parsed.error);

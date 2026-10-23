@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Sparkles,
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
   Bot,
   Settings,
   Plus,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -29,6 +30,7 @@ export function AppSidebar({
   onCloseMobile,
 }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const mainLinks = [
     {
@@ -171,21 +173,37 @@ export function AppSidebar({
         </div>
 
         {/* Micro Profile Card */}
-        <Link
-          href="/settings"
-          onClick={onCloseMobile}
-          className="p-2.5 rounded-2xl bg-[#faf9f6] border border-[#eae6df] flex items-center gap-3 hover:bg-[#f1f3fe] transition-colors group block"
-        >
-          <div className="w-8 h-8 rounded-full bg-[#ede9fe] text-[#5a4bac] font-heading font-bold text-xs flex items-center justify-center border border-[#c9c4d4] shrink-0">
-            PS
-          </div>
-          <div className="overflow-hidden min-w-0">
-            <p className="text-xs font-heading font-semibold text-[#181c23] truncate group-hover:text-[#5a4bac] transition-colors">
-              Priya Sharma
-            </p>
-            <p className="text-[10px] text-[#797583] truncate">Lead Planner • Luxe Tier</p>
-          </div>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/settings"
+            onClick={onCloseMobile}
+            className="flex-1 p-2.5 rounded-2xl bg-[#faf9f6] border border-[#eae6df] flex items-center gap-3 hover:bg-[#f1f3fe] transition-colors group min-w-0"
+          >
+            <div className="w-8 h-8 rounded-full bg-[#ede9fe] text-[#5a4bac] font-heading font-bold text-xs flex items-center justify-center border border-[#c9c4d4] shrink-0">
+              PS
+            </div>
+            <div className="overflow-hidden min-w-0">
+              <p className="text-xs font-heading font-semibold text-[#181c23] truncate group-hover:text-[#5a4bac] transition-colors">
+                Priya Sharma
+              </p>
+              <p className="text-[10px] text-[#797583] truncate">Lead Planner • Luxe Tier</p>
+            </div>
+          </Link>
+          <button
+            onClick={async () => {
+              try {
+                await fetch("/api/auth/logout", { method: "POST" });
+              } finally {
+                router.push("/login");
+                router.refresh();
+              }
+            }}
+            title="Log Out"
+            className="w-10 h-10 rounded-2xl bg-[#faf9f6] border border-[#eae6df] flex items-center justify-center text-[#797583] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/40 transition-colors cursor-pointer shrink-0"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

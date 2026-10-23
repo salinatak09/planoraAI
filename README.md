@@ -60,6 +60,32 @@ Located in [`src/lib/types/models.ts`](src/lib/types/models.ts) and [`src/lib/va
 
 ---
 
+## 🔐 Authentication & Authorization Architecture
+
+Planora AI implements a zero-trust, production-ready session management system built with `jose` and `bcryptjs` compatible with Next.js 16 App Router and React 19.
+
+### Key Security Principles
+1. **Never Store Plaintext Passwords**:
+   - Uses `bcryptjs` with 10 salt rounds (`src/lib/auth/password.ts`).
+2. **Cryptographically Signed JWT Sessions**:
+   - Uses `jose` with `HS256` HMAC signing (`src/lib/auth/jwt.ts`).
+   - Tokens include claims for `userId`, `email`, `name`, `role`, `issuer: planora.ai`, and `audience: planora-app` with 7-day expiration.
+3. **HTTP-Only, Secure Cookies**:
+   - Session tokens are stored in the `planora_session` cookie (`src/lib/auth/cookies.ts`).
+   - Configured with `httpOnly: true`, `secure: true` in production, `sameSite: "lax"`, and `path: "/"`.
+   - Never stored in `localStorage` or accessible to client-side scripts.
+4. **Server-Side Identity Derivation**:
+   - `ownerId` is derived exclusively from the verified server session (`src/lib/auth/session.ts`), never from client payloads or query parameters.
+   - Cross-user event or child resource access is strictly blocked by `verifyEventOwnership`.
+5. **Edge Route Guard Middleware**:
+   - [`src/middleware.ts`](src/middleware.ts) protects `/dashboard`, `/events/*`, `/onboarding`, and `/settings`.
+   - Unauthenticated requests are redirected to `/login?callbackUrl=<requested-path>`.
+   - Already-authenticated users accessing `/login` or `/signup` are automatically forwarded to `/dashboard`.
+6. **Sliding-Window Rate Limiting**:
+   - Sensitive endpoints (`/api/auth/*` and `/api/ai/ideas`) enforce IP/identifier rate limiting (`src/lib/auth/rate-limit.ts`) returning HTTP 429 when limits are exceeded.
+
+---
+
 ## 🚀 Getting Started
 
 ### 1. Prerequisites

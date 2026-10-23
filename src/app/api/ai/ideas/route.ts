@@ -1,13 +1,33 @@
 import { NextRequest } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth/session";
+import { requireAuthenticatedUser, AuthenticationError } from "@/lib/auth/session";
 import { aiGenerateIdeasSchema } from "@/lib/validation/schemas";
 import { generateEventIdeas } from "@/lib/ai/gemini";
-import { apiSuccess, apiValidationError, apiError } from "@/lib/utils/response";
+import { checkRateLimit, getClientIdentifier } from "@/lib/auth/rate-limit";
+import { apiSuccess, apiValidationError, apiError, apiUnauthorized } from "@/lib/utils/response";
 
 export async function POST(req: NextRequest) {
   try {
-    // Authenticate user session
-    await getAuthenticatedUser();
+    // 1. Authenticate user session strictly from server session
+    let user;
+    try {
+      user = await requireAuthenticatedUser();
+    } catch (err: unknown) {
+      if (err instanceof AuthenticationError) {
+        return apiUnauthorized("You must be logged in to generate AI ideas");
+      }
+      throw err;
+    }
+
+    // 2. Rate limit AI requests (max 15 generations per minute per user)
+    const rateLimitKey = user.userId || getClientIdentifier(req.headers, "ai");
+    const rateLimit = checkRateLimit(`ai:${rateLimitKey}`, 15, 60);
+    if (!rateLimit.success) {
+      return apiError(
+        `AI generation limit reached. Please wait ${rateLimit.resetInSeconds} seconds.`,
+        "RATE_LIMITED",
+        429
+      );
+    }
 
     const body = await req.json();
     const parsed = aiGenerateIdeasSchema.safeParse(body);

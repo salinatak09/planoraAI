@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Sparkles,
   Search,
@@ -11,6 +12,8 @@ import {
   ChevronDown,
   Menu,
   X,
+  LogOut,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -27,14 +30,29 @@ export function TopNavBar({
   onOpenMobileMenu,
   isMobileMenuOpen = false,
 }: TopNavBarProps) {
+  const router = useRouter();
   const [showEventDropdown, setShowEventDropdown] = React.useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
   const sampleEvents = [
     { id: "evt-aarav-meera", title: "Aarav & Meera Wedding Celebration", tag: "Jaipur, Dec 2026" },
     { id: "evt-silver-jubilee", title: "25th Silver Jubilee Rooftop Soirée", tag: "New York, Nov 2026" },
     { id: "evt-harvest-gala", title: "Oakridge Harvest & Lantern Festival", tag: "Oakridge, Nov 2026" },
   ];
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Continue with redirect regardless
+    } finally {
+      router.push("/login");
+      router.refresh();
+    }
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-[#eae6df] bg-white px-4 md:px-6 shadow-xs">
@@ -147,18 +165,52 @@ export function TopNavBar({
 
         <div className="h-5 w-px bg-[#eae6df] hidden sm:block mx-1" />
 
-        {/* User Avatar */}
-        <Link href="/settings" className="flex items-center gap-2 pl-1 group">
-          <div className="w-8 h-8 rounded-full bg-[#ede9fe] text-[#5a4bac] font-heading font-bold text-xs flex items-center justify-center border border-[#c9c4d4] group-hover:ring-2 group-hover:ring-[#5a4bac]/20 transition-all">
-            PS
-          </div>
-          <div className="hidden lg:block text-left">
-            <div className="text-xs font-heading font-semibold text-[#181c23] leading-none">
-              Priya Sharma
+        {/* User Avatar & Menu */}
+        <div className="relative">
+          <button
+            onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+            className="flex items-center gap-2 pl-1 group cursor-pointer focus:outline-none"
+            aria-label="User profile and options"
+          >
+            <div className="w-8 h-8 rounded-full bg-[#ede9fe] text-[#5a4bac] font-heading font-bold text-xs flex items-center justify-center border border-[#c9c4d4] group-hover:ring-2 group-hover:ring-[#5a4bac]/20 transition-all">
+              PS
             </div>
-            <div className="text-[10px] text-[#797583] leading-none mt-1">Lead Planner</div>
-          </div>
-        </Link>
+            <div className="hidden lg:block text-left">
+              <div className="text-xs font-heading font-semibold text-[#181c23] leading-none">
+                Priya Sharma
+              </div>
+              <div className="text-[10px] text-[#797583] leading-none mt-1">Lead Planner</div>
+            </div>
+            <ChevronDown className="w-3 h-3 text-[#797583] hidden sm:block" />
+          </button>
+
+          {showProfileDropdown && (
+            <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#eae6df] bg-white p-2 shadow-lg z-50 animate-in fade-in zoom-in-95 duration-100">
+              <div className="px-3 py-2 border-b border-[#f5f4f0] mb-1">
+                <p className="text-xs font-heading font-bold text-[#181c23]">Priya Sharma</p>
+                <p className="text-[11px] text-[#797583]">priya@planora.ai</p>
+              </div>
+
+              <Link
+                href="/settings"
+                onClick={() => setShowProfileDropdown(false)}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-[#484552] hover:bg-[#f5f4f0] hover:text-[#181c23] transition-colors"
+              >
+                <Settings className="w-3.5 h-3.5 text-[#797583]" />
+                <span>Studio Settings</span>
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-[#ba1a1a] hover:bg-[#ffdad6]/40 transition-colors text-left cursor-pointer disabled:opacity-50"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{isLoggingOut ? "Signing out..." : "Log Out"}</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
