@@ -13,6 +13,8 @@ const signupSchema = z.object({
   displayName: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
   email: z.string().trim().email("Invalid email address").toLowerCase(),
   password: z.string().min(6, "Password must be at least 6 characters").max(100),
+  agency: z.string().trim().min(2, "Agency must be at least 2 characters").max(100),
+  role: z.string().trim().min(2, "Role must be at least 2 characters").max(100),
 });
 
 export async function POST(req: NextRequest) {
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
       return apiValidationError(parsed.error);
     }
 
-    const { displayName, email, password } = parsed.data;
+    const { displayName, email, password, agency, role } = parsed.data;
 
     // 3. Password hashing (never store plaintext)
     const passwordHash = await hashPassword(password);
@@ -47,6 +49,8 @@ export async function POST(req: NextRequest) {
       displayName,
       email,
       passwordHash,
+      agency,
+      role,
       authProvider: "credentials",
       preferences: {
         defaultCurrency: "₹",
@@ -72,7 +76,8 @@ export async function POST(req: NextRequest) {
       userId: userId.toString(),
       email,
       name: displayName,
-      role: "organizer",
+      agency,
+      role: role || "organizer",
     });
 
     // 6. Return response with HTTP-only cookie
@@ -82,7 +87,8 @@ export async function POST(req: NextRequest) {
           id: userId.toString(),
           displayName,
           email,
-          role: "organizer",
+          agency,
+          role: role || "organizer",
         },
       },
       201

@@ -23,16 +23,17 @@ export default function OnboardingWizardPage() {
   const [currentStep, setCurrentStep] = React.useState(1);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [generationComplete, setGenerationComplete] = React.useState(false);
+  const [createdEventId, setCreatedEventId] = React.useState<string | null>(null);
 
   // Form State
   const [eventType, setEventType] = React.useState("wedding");
-  const [title, setTitle] = React.useState("Aarav & Meera Wedding Celebration");
-  const [location, setLocation] = React.useState("Udaipur Palace & Heritage Grounds, Rajasthan");
-  const [date, setDate] = React.useState("2026-12-14");
-  const [guests, setGuests] = React.useState(350);
-  const [budget, setBudget] = React.useState(3850000);
+  const [title, setTitle] = React.useState("");
+  const [location, setLocation] = React.useState("");
+  const [date, setDate] = React.useState("");
+  const [guests, setGuests] = React.useState(0);
+  const [budget, setBudget] = React.useState(0);
   const [currency, setCurrency] = React.useState("₹");
-  const [theme, setTheme] = React.useState("Royal Palace Heritage & Candlelit Amber");
+  const [theme, setTheme] = React.useState("");
   const [priority, setPriority] = React.useState("decor");
 
   const eventTypes = [
@@ -89,16 +90,41 @@ export default function OnboardingWizardPage() {
     },
   ];
 
-  function handleNext() {
+  async function handleNext() {
     if (currentStep < 4) {
       setCurrentStep((prev) => prev + 1);
     } else if (currentStep === 4) {
       setCurrentStep(5);
       setIsGenerating(true);
-      setTimeout(() => {
-        setIsGenerating(false);
-        setGenerationComplete(true);
-      }, 2400);
+
+      try {
+        const res = await fetch("/api/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            type: eventType,
+            date,
+            location,
+            guestCount: Number(guests),
+            budgetTotal: Number(budget),
+            currency,
+            theme,
+            eventPriorities: [priority],
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && (data?.data?._id || data?.data?.id)) {
+          setCreatedEventId(data.data._id || data.data.id);
+        }
+      } catch {
+        // Fallback gracefully
+      } finally {
+        setTimeout(() => {
+          setIsGenerating(false);
+          setGenerationComplete(true);
+        }, 1200);
+      }
     }
   }
 
@@ -447,7 +473,10 @@ export default function OnboardingWizardPage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                    <Link href="/events/evt-aarav-meera" className="w-full sm:w-auto">
+                    <Link
+                      href={createdEventId ? `/events/${createdEventId}` : "/dashboard"}
+                      className="w-full sm:w-auto"
+                    >
                       <Button size="lg" className="w-full sm:w-auto" rightIcon={<ArrowRight className="w-4 h-4" />}>
                         Launch Event Workspace Hub
                       </Button>

@@ -74,7 +74,7 @@ export default function MarketingLandingPage() {
       <section className="relative z-10 pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ede9fe] border border-[#dcd6cc] text-[#5a4bac] text-xs font-heading font-semibold mb-6 shadow-xs">
           <Sparkles className="w-3.5 h-3.5 text-[#5a4bac]" />
-          <span>Planora AI 2.5 • Next-Gen Generative Celebration Orchestration</span>
+          <span>Planora AI • Next-Gen Generative Celebration Orchestration</span>
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-extrabold text-[#181c23] tracking-tight max-w-4xl mx-auto leading-[1.15]">
@@ -107,7 +107,7 @@ export default function MarketingLandingPage() {
             <CheckCircle2 className="w-4 h-4 text-[#466557]" /> Multi-currency (₹ INR / $ USD)
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-[#466557]" /> Powered by Gemini 2.5
+            <CheckCircle2 className="w-4 h-4 text-[#466557]" /> Powered by Gemini 3.8
           </span>
         </div>
 

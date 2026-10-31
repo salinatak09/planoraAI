@@ -1,5 +1,5 @@
 export * from "./models";
-export type EventType = "wedding" | "birthday" | "anniversary" | "community";
+export type EventType = "wedding" | "birthday" | "anniversary" | "community" | "other";
 
 export type EventStatus = "planning" | "confirmed" | "in_progress" | "completed" | "cancelled";
 
@@ -89,6 +89,7 @@ export interface UserSession {
   userId: string;
   email: string;
   name: string;
+  agency: string;
   role: "organizer" | "admin";
 }
 

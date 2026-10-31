@@ -13,9 +13,9 @@ interface AppShellProps {
 
 export function AppShell({
   children,
-  activeEventTitle = "Aarav & Meera Wedding Celebration",
-  activeEventLocation = "Jaipur, Dec 2026",
-  eventId = "evt-aarav-meera",
+  activeEventTitle,
+  activeEventLocation,
+  eventId,
 }: AppShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 

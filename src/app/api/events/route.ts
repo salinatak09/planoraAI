@@ -101,20 +101,33 @@ export async function POST(req: NextRequest) {
 
     const now = new Date();
     const ownerObjectId = toOptionalObjectId(user.userId) || new ObjectId();
+    const eventId = new ObjectId();
+
+    const preferences = {
+      ...(parsed.data.city ? { city: parsed.data.city } : {}),
+      ...(parsed.data.venuePreference ? { venuePreference: parsed.data.venuePreference } : {}),
+      ...(parsed.data.indoorOutdoor ? { indoorOutdoor: parsed.data.indoorOutdoor } : {}),
+      colorPreferences: parsed.data.colorPreferences || [],
+      foodPreferences: parsed.data.foodPreferences || [],
+      eventPriorities: parsed.data.eventPriorities || [],
+      accessibilityNeeds: parsed.data.accessibilityNeeds || [],
+      ...(parsed.data.notes ? { notes: parsed.data.notes } : {}),
+      ...(parsed.data.preferences || {}),
+    };
 
     const newEvent: EventModel = {
-      _id: new ObjectId(),
+      _id: eventId,
       ownerId: ownerObjectId,
       title: parsed.data.title,
       type: parsed.data.type,
       date: parsed.data.date,
-      timezone: "Asia/Kolkata",
+      timezone: parsed.data.timezone || "Asia/Kolkata",
       location: parsed.data.location,
       guestCount: parsed.data.guestCount,
-      currency: "₹",
+      currency: parsed.data.currency || "₹",
       totalBudget: parsed.data.budgetTotal,
       theme: parsed.data.theme,
-      preferences: {},
+      preferences,
       status: "planning",
       createdAt: now,
       updatedAt: now,
@@ -123,6 +136,103 @@ export async function POST(req: NextRequest) {
     if (process.env.MONGODB_URI) {
       const collection = await getEventsCollection();
       await collection.insertOne(newEvent);
+
+      // Seed starter budget envelopes and starter tasks for immediate productivity
+      try {
+        const [budgetCol, taskCol] = await Promise.all([
+          (await import("@/lib/db/collections")).getBudgetItemsCollection(),
+          (await import("@/lib/db/collections")).getTasksCollection(),
+        ]);
+
+        const totalB = parsed.data.budgetTotal;
+        const initialBudgetItems = [
+          {
+            _id: new ObjectId(),
+            eventId,
+            ownerId: ownerObjectId,
+            category: "venue",
+            description: "Venue reservation & security deposit",
+            estimatedAmount: Math.round(totalB * 0.35),
+            actualAmount: 0,
+            paymentStatus: "unpaid" as const,
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            _id: new ObjectId(),
+            eventId,
+            ownerId: ownerObjectId,
+            category: "catering",
+            description: "Bespoke banquet menu & bar service",
+            estimatedAmount: Math.round(totalB * 0.25),
+            actualAmount: 0,
+            paymentStatus: "unpaid" as const,
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            _id: new ObjectId(),
+            eventId,
+            ownerId: ownerObjectId,
+            category: "decor",
+            description: "Theme styling, florals & stage lighting",
+            estimatedAmount: Math.round(totalB * 0.2),
+            actualAmount: 0,
+            paymentStatus: "unpaid" as const,
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            _id: new ObjectId(),
+            eventId,
+            ownerId: ownerObjectId,
+            category: "photography",
+            description: "Cinematography & photography team",
+            estimatedAmount: Math.round(totalB * 0.1),
+            actualAmount: 0,
+            paymentStatus: "unpaid" as const,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ];
+
+        const initialTasks = [
+          {
+            _id: new ObjectId(),
+            eventId,
+            ownerId: ownerObjectId,
+            title: "Confirm venue contract & permit filings",
+            description: "Review capacity limits and sound curfew requirements.",
+            dueDate: parsed.data.date,
+            priority: "high" as const,
+            status: "pending" as const,
+            assignedTo: "Lead Planner",
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            _id: new ObjectId(),
+            eventId,
+            ownerId: ownerObjectId,
+            title: "Finalize dietary requirements & menu tasting",
+            description: "Address allergen protocols and signature mocktails.",
+            dueDate: parsed.data.date,
+            priority: "medium" as const,
+            status: "pending" as const,
+            assignedTo: "Catering Lead",
+            createdAt: now,
+            updatedAt: now,
+          },
+        ];
+
+        await Promise.all([
+          budgetCol.insertMany(initialBudgetItems),
+          taskCol.insertMany(initialTasks),
+        ]);
+      } catch (seedErr) {
+        // Non-blocking error if starter items fail
+        console.warn("Could not seed starter items:", seedErr);
+      }
     }
 
     return apiSuccess(serializeDocument(newEvent), 201);

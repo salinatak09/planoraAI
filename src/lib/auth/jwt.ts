@@ -4,6 +4,7 @@ export interface SessionPayload extends JWTPayload {
   userId: string;
   email: string;
   name: string;
+  agency: string;
   role: "organizer" | "admin";
 }
 
@@ -53,6 +54,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       email: String(payload.email),
       name: String(payload.name || "Event Organizer"),
       role: (payload.role as "organizer" | "admin") || "organizer",
+      agency: String(payload.agency),
       ...payload,
     };
   } catch {

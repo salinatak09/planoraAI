@@ -96,7 +96,7 @@ export function AILoader({
 
       <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-[#797583]">
         <span className="w-2 h-2 rounded-full bg-[#466557] animate-pulse" />
-        <span>Gemini 2.5 Generative Intelligence Active</span>
+        <span>Gemini 3.8 Generative Intelligence Active</span>
       </div>
     </div>
   );

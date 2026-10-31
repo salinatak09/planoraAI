@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -17,6 +16,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useEffect, useState } from "react";
+import { getCurrLoggedInUser } from "@/lib/utils/user";
 
 interface AppSidebarProps {
   eventId?: string;
@@ -25,14 +26,33 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({
-  eventId = "evt-aarav-meera",
+  eventId,
   isMobileOpen = false,
   onCloseMobile,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const mainLinks = [
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [agency, setAgency] = useState("Luxe Heritage Celebrations");
+  const [error, setError] = useState("");
+
+  async function fetchCurrUser(){
+    const user = await getCurrLoggedInUser();
+    if(user.error){
+      setError(user.error);
+    }
+    setName(user.name);
+    setRole(user.role);
+    setAgency(user.agency);
+  }
+
+  useEffect(() => {
+    fetchCurrUser();
+  }, []);
+
+  const mainLinks = eventId ? [
     {
       label: "Dashboard",
       href: "/dashboard",
@@ -70,6 +90,13 @@ export function AppSidebar({
       isActive: pathname.includes("/ideas"),
       badge: "PRO",
     },
+  ]: [
+    {
+      label: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+      isActive: pathname === "/dashboard",
+    }
   ];
 
   const secondaryLinks = [
@@ -91,7 +118,7 @@ export function AppSidebar({
     <div className="flex h-full flex-col justify-between p-5 bg-[#ffffff] border-r border-[#eae6df]">
       <div className="space-y-5">
         {/* Workspace Brand Block */}
-        <div className="flex items-center gap-3 px-1">
+        <div className="flex lg:hidden items-center gap-3 px-1">
           <div className="w-9 h-9 rounded-xl bg-[#5a4bac] flex items-center justify-center text-white shadow-xs">
             <Sparkles className="w-5 h-5" />
           </div>
@@ -138,11 +165,11 @@ export function AppSidebar({
                   }`}
                 />
                 <span className="truncate">{item.label}</span>
-                {item.badge && (
+                {/* {item.badge && (
                   <span className="ml-auto text-[10px] bg-[#c8ead9] text-[#2f4d40] px-1.5 py-0.5 rounded-full font-bold">
                     {item.badge}
                   </span>
-                )}
+                )} */}
               </Link>
             );
           })}
@@ -180,13 +207,13 @@ export function AppSidebar({
             className="flex-1 p-2.5 rounded-2xl bg-[#faf9f6] border border-[#eae6df] flex items-center gap-3 hover:bg-[#f1f3fe] transition-colors group min-w-0"
           >
             <div className="w-8 h-8 rounded-full bg-[#ede9fe] text-[#5a4bac] font-heading font-bold text-xs flex items-center justify-center border border-[#c9c4d4] shrink-0">
-              PS
+              {name?.trim().split(/\s+/).filter(Boolean).map(n => n[0].toUpperCase()).filter((_, i, arr) => i === 0 || i === arr.length - 1).join("") || ""}
             </div>
             <div className="overflow-hidden min-w-0">
               <p className="text-xs font-heading font-semibold text-[#181c23] truncate group-hover:text-[#5a4bac] transition-colors">
-                Priya Sharma
+                {name}
               </p>
-              <p className="text-[10px] text-[#797583] truncate">Lead Planner • Luxe Tier</p>
+              <p className="text-[10px] text-[#797583] truncate">{role} • {agency}</p>
             </div>
           </Link>
           <button

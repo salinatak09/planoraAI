@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import {useState, FormEvent} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Sparkles, ArrowRight, Mail, User, Building, Lock, CheckCircle2, AlertCircle } from "lucide-react";
@@ -9,15 +9,15 @@ import { Input } from "@/components/ui/Input";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [name, setName] = React.useState("Priya Sharma");
-  const [agency, setAgency] = React.useState("Luxe Heritage Celebrations");
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [role, setRole] = React.useState("Luxury Destination Specialist");
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [agency, setAgency] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("Luxury Destination Specialist");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function handleSignup(e: React.FormEvent) {
+  async function handleSignup(e: FormEvent) {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage(null);
@@ -36,6 +36,8 @@ export default function SignupPage() {
           displayName: name,
           email,
           password,
+          agency,
+          role,
         }),
       });
 
@@ -98,6 +100,7 @@ export default function SignupPage() {
                 label="Full Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                placeholder="Priya Sharma"
                 leftIcon={<User className="w-4 h-4" />}
                 required
               />
@@ -105,6 +108,7 @@ export default function SignupPage() {
                 label="Studio / Agency Name"
                 value={agency}
                 onChange={(e) => setAgency(e.target.value)}
+                placeholder="Luxe Heritage Celebration"
                 leftIcon={<Building className="w-4 h-4" />}
                 required
               />
@@ -145,13 +149,16 @@ export default function SignupPage() {
                 <option value="Wedding & Gala Producer">Wedding & Gala Producer</option>
                 <option value="Corporate & Milestone Event Lead">Corporate & Milestone Event Lead</option>
                 <option value="Community Festival Director">Community Festival Director</option>
+                <option value="Other">Other</option>
               </select>
             </div>
 
             <div className="p-3 rounded-2xl bg-[#faf9f6] border border-[#eae6df] text-xs text-[#686e77] space-y-1">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#466557]" />
-                <span>Cryptographically secured session & MongoDB identity</span>
+                <span>Cryptographically secured session 
+                  {/* & MongoDB identity */}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#466557]" />

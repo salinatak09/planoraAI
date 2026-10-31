@@ -28,6 +28,7 @@ export async function getAuthenticatedUser(): Promise<UserSession | null> {
     userId: payload.userId,
     email: payload.email,
     name: payload.name || "Event Organizer",
+    agency: payload.agency || "Self Agency",
     role: payload.role || "organizer",
   };
 }

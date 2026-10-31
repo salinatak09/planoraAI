@@ -12,6 +12,7 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
     | "birthday"
     | "anniversary"
     | "community"
+    | "other"
     | "success"
     | "warning"
     | "danger"
@@ -35,6 +36,7 @@ export function Badge({
     birthday: "bg-[#fde8d7] text-[#a66227] border border-[#ffdcc4]",
     anniversary: "bg-[#ffdcc4] text-[#884a0f] border border-[#ffb780]",
     community: "bg-[#e8f0ec] text-[#466557] border border-[#c8ead9]",
+    other: "bg-[#f1f3fe] text-[#473698] border border-[#dcd6cc]",
     success: "bg-[#e8f0ec] text-[#466557]",
     warning: "bg-[#fde8d7] text-[#884a0f]",
     danger: "bg-[#ffdad6] text-[#ba1a1a]",
@@ -71,6 +73,7 @@ export function EventTypeBadge({ type }: { type: EventType }) {
     birthday: "Birthday Celebration",
     anniversary: "Anniversary Jubilee",
     community: "Community Gathering",
+    other: "Special Event",
   };
 
   return <Badge variant={type}>{labels[type] || type}</Badge>;
@@ -92,7 +95,15 @@ export function EventStatusBadge({ status }: { status: EventStatus }) {
   return <Badge variant={current.variant}>{current.label}</Badge>;
 }
 
-export function TaskPriorityBadge({ priority }: { priority: TaskPriority }) {
+export function TaskPriorityBadge({
+  priority,
+  size = "md",
+  className = "",
+}: {
+  priority: TaskPriority;
+  size?: "sm" | "md";
+  className?: string;
+}) {
   const map: Record<
     TaskPriority,
     { label: string; variant: "default" | "success" | "warning" | "danger" | "info" }
@@ -104,5 +115,9 @@ export function TaskPriorityBadge({ priority }: { priority: TaskPriority }) {
   };
 
   const current = map[priority] || { label: priority, variant: "default" };
-  return <Badge variant={current.variant}>{current.label}</Badge>;
+  return (
+    <Badge variant={current.variant} size={size} className={className}>
+      {current.label}
+    </Badge>
+  );
 }

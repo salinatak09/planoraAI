@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import {useEffect, useState, FormEvent} from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -16,16 +16,19 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { getCurrLoggedInUser } from "@/lib/utils/user";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [name, setName] = React.useState("Priya Sharma");
-  const [email, setEmail] = React.useState("priya@planora.ai");
-  const [studio, setStudio] = React.useState("Luxe Heritage Celebrations");
-  const [currency, setCurrency] = React.useState("₹");
-  const [autoCopilot, setAutoCopilot] = React.useState(true);
-  const [budgetAlerts, setBudgetAlerts] = React.useState(true);
-  const [isSaved, setIsSaved] = React.useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
+  const [studio, setStudio] = useState("Luxe Heritage Celebrations");
+  const [currency, setCurrency] = useState("₹");
+  const [autoCopilot, setAutoCopilot] = useState(true);
+  const [budgetAlerts, setBudgetAlerts] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+  const [error, setError] = useState("");
 
   const team = [
     { name: "Priya Sharma", role: "Principal Producer & Founder", access: "Owner", email: "priya@planora.ai" },
@@ -34,10 +37,35 @@ export default function SettingsPage() {
     { name: "Rohit Das", role: "Logistics & Transport Coordinator", access: "Viewer", email: "rohit@planora.ai" },
   ];
 
-  function handleSave(e: React.FormEvent) {
+  async function fetchCurrUser(){
+    const user = await getCurrLoggedInUser();
+    if(user.error){
+      setError(user.error);
+    }
+    setName(user.name);
+    setEmail(user.email);
+    setRole(user.role);
+    setStudio(user.agency);
+  }
+
+  useEffect(() => {
+    fetchCurrUser();
+  }, []);
+
+  function handleSave(e: FormEvent) {
     e.preventDefault();
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
+  }
+
+  async function logout(){
+    try{
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch(err){
+      setError("Error while logout, Try again later!");
+    }
   }
 
   return (
@@ -53,6 +81,12 @@ export default function SettingsPage() {
             </p>
           </div>
 
+          {error && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
+              {error}
+            </div>
+          )}
+
           {isSaved && (
             <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#c5e7d6] text-[#466557] text-xs font-heading font-bold animate-in fade-in">
               <CheckCircle2 className="w-4 h-4" />
@@ -65,17 +99,17 @@ export default function SettingsPage() {
           {/* Profile Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Lead Planner Profile</CardTitle>
+              <CardTitle className="text-base">{role} Profile</CardTitle>
               <CardDescription>Your public identity on collaborative client portals and export briefs.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-[#ede9fe] text-[#5a4bac] font-heading font-extrabold text-xl flex items-center justify-center border-2 border-[#dcd6cc]">
-                  PS
+                  {name?.trim().split(/\s+/).filter(Boolean).map(n => n[0].toUpperCase()).filter((_, i, arr) => i === 0 || i === arr.length - 1).join("") || ""}
                 </div>
                 <div>
                   <h4 className="font-heading font-bold text-sm text-[#181c23]">{name}</h4>
-                  <p className="text-xs text-[#797583]">Principal Planner • Luxe Enterprise Tier</p>
+                  <p className="text-xs text-[#797583]">{role} • {studio}</p>
                 </div>
               </div>
 
@@ -271,11 +305,7 @@ export default function SettingsPage() {
               variant="outline"
               className="text-[#ba1a1a] border-[#ffdad6] hover:bg-[#ffdad6]/30 hover:border-[#ba1a1a]/30 shrink-0"
               leftIcon={<LogOut className="w-4 h-4" />}
-              onClick={async () => {
-                await fetch("/api/auth/logout", { method: "POST" });
-                router.push("/login");
-                router.refresh();
-              }}
+              onClick={logout}
             >
               Sign Out of Studio
             </Button>

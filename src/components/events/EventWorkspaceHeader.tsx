@@ -16,6 +16,8 @@ import {
   LayoutDashboard,
   Share2,
   FileDown,
+  Edit3,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EventTypeBadge, EventStatusBadge } from "@/components/ui/Badge";
@@ -31,6 +33,10 @@ interface EventWorkspaceHeaderProps {
   location: string;
   guestCount: number;
   budgetTotal: number;
+  currency?: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onReplanning?: () => void;
 }
 
 export function EventWorkspaceHeader({
@@ -43,6 +49,10 @@ export function EventWorkspaceHeader({
   location,
   guestCount,
   budgetTotal,
+  currency = "₹",
+  onEdit,
+  onDelete,
+  onReplanning,
 }: EventWorkspaceHeaderProps) {
   const pathname = usePathname();
 
@@ -85,12 +95,44 @@ export function EventWorkspaceHeader({
             </span>
             <span className="flex items-center gap-1">
               <Wallet className="w-3.5 h-3.5 text-[#466557]" />
-              ₹{budgetTotal.toLocaleString()} Allocated Budget
+              {currency}{budgetTotal.toLocaleString()} Allocated Budget
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {onReplanning && (
+            <button
+              onClick={onReplanning}
+              className="px-3.5 py-2 rounded-full border border-[#dcd6cc] bg-gradient-to-r from-[#ede9fe] to-white text-xs font-heading font-semibold text-[#5a4bac] hover:bg-[#ede9fe] transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+              title="AI Change Impact & Replanning"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#5a4bac]" />
+              <span>Plan Changes</span>
+            </button>
+          )}
+
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="px-3 py-2 rounded-full border border-[#eae6df] bg-white text-xs font-heading font-semibold text-[#181c23] hover:bg-[#faf9f6] transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+              title="Edit Event Details"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-[#5a4bac]" />
+              <span className="hidden sm:inline">Edit Details</span>
+            </button>
+          )}
+
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              className="p-2.5 rounded-full border border-[#ffdad6] bg-white text-[#ba1a1a] hover:bg-[#ffdad6]/40 transition-colors shadow-2xs cursor-pointer"
+              title="Delete Celebration"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+
           <button
             onClick={() => alert("Event blueprint export prepared for client distribution (PDF).")}
             className="p-2.5 rounded-full border border-[#eae6df] bg-white text-[#484552] hover:bg-[#faf9f6] transition-colors shadow-2xs cursor-pointer"

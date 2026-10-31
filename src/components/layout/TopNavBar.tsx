@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import {useEffect, useState} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +16,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { getCurrLoggedInUser } from "@/lib/utils/user";
 
 interface TopNavBarProps {
   activeEventTitle?: string;
@@ -25,22 +26,68 @@ interface TopNavBarProps {
 }
 
 export function TopNavBar({
-  activeEventTitle = "Aarav & Meera Wedding Celebration",
-  activeEventLocation = "Jaipur, Dec 2026",
+  activeEventTitle,
+  activeEventLocation,
   onOpenMobileMenu,
   isMobileMenuOpen = false,
 }: TopNavBarProps) {
   const router = useRouter();
-  const [showEventDropdown, setShowEventDropdown] = React.useState(false);
-  const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const [showEventDropdown, setShowEventDropdown] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [dynamicEvents, setDynamicEvents] = useState<
+    { id: string; title: string; tag: string }[]
+  >([]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
 
   const sampleEvents = [
     { id: "evt-aarav-meera", title: "Aarav & Meera Wedding Celebration", tag: "Jaipur, Dec 2026" },
     { id: "evt-silver-jubilee", title: "25th Silver Jubilee Rooftop Soirée", tag: "New York, Nov 2026" },
     { id: "evt-harvest-gala", title: "Oakridge Harvest & Lantern Festival", tag: "Oakridge, Nov 2026" },
   ];
+
+  async function fetchCurrUser(){
+    const user = await getCurrLoggedInUser();
+    setName(user.name);
+    setEmail(user.email);
+    setRole(user.role);
+  }
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadEvents() {
+      try {
+        const res = await fetch("/api/events?limit=8");
+        const json = await res.json();
+        if (!isMounted) return;
+        if (res.ok && json.data?.items && json.data.items.length > 0) {
+          setDynamicEvents(
+            json.data.items.map(
+              (e: { id?: string; _id?: string; title: string; location?: string; date?: string }) => ({
+                id: e.id || e._id || "",
+                title: e.title,
+                tag: `${e.location ? e.location.split(",")[0] : "Venue"}, ${
+                  e.date ? e.date.slice(0, 10) : ""
+                }`,
+              })
+            )
+          );
+        }
+      } catch {
+        // Fall back gracefully
+      }
+    }
+    loadEvents();
+    fetchCurrUser();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const displayEvents = dynamicEvents.length > 0 ? dynamicEvents : [];
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -94,7 +141,7 @@ export function TopNavBar({
               <div className="px-3 py-1.5 text-[11px] font-heading font-semibold text-[#797583] uppercase tracking-wider">
                 Switch Celebration
               </div>
-              {sampleEvents.map((ev) => (
+              {displayEvents.map((ev) => (
                 <Link
                   key={ev.id}
                   href={`/events/${ev.id}`}
@@ -173,13 +220,13 @@ export function TopNavBar({
             aria-label="User profile and options"
           >
             <div className="w-8 h-8 rounded-full bg-[#ede9fe] text-[#5a4bac] font-heading font-bold text-xs flex items-center justify-center border border-[#c9c4d4] group-hover:ring-2 group-hover:ring-[#5a4bac]/20 transition-all">
-              PS
+              {name?.trim().split(/\s+/).filter(Boolean).map(n => n[0].toUpperCase()).filter((_, i, arr) => i === 0 || i === arr.length - 1).join("") || ""}
             </div>
             <div className="hidden lg:block text-left">
               <div className="text-xs font-heading font-semibold text-[#181c23] leading-none">
-                Priya Sharma
+                {name}
               </div>
-              <div className="text-[10px] text-[#797583] leading-none mt-1">Lead Planner</div>
+              <div className="text-[10px] text-[#797583] leading-none mt-1">{role}</div>
             </div>
             <ChevronDown className="w-3 h-3 text-[#797583] hidden sm:block" />
           </button>
@@ -187,8 +234,8 @@ export function TopNavBar({
           {showProfileDropdown && (
             <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[#eae6df] bg-white p-2 shadow-lg z-50 animate-in fade-in zoom-in-95 duration-100">
               <div className="px-3 py-2 border-b border-[#f5f4f0] mb-1">
-                <p className="text-xs font-heading font-bold text-[#181c23]">Priya Sharma</p>
-                <p className="text-[11px] text-[#797583]">priya@planora.ai</p>
+                <p className="text-xs font-heading font-bold text-[#181c23]">{name}</p>
+                <p className="text-[11px] text-[#797583]">{email}</p>
               </div>
 
               <Link

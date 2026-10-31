@@ -9,6 +9,7 @@ import type {
   EventVendorModel,
   IdeaModel,
   ConversationMessageModel,
+  EventChangeLogModel,
 } from "@/lib/types";
 
 export const COLLECTIONS = {
@@ -20,6 +21,7 @@ export const COLLECTIONS = {
   EVENT_VENDORS: "event_vendors",
   IDEAS: "ideas",
   CONVERSATION_MESSAGES: "conversation_messages",
+  CHANGE_LOGS: "change_logs",
 } as const;
 
 export async function getUsersCollection(dbInstance?: Db): Promise<Collection<UserModel>> {
@@ -62,6 +64,13 @@ export async function getConversationMessagesCollection(
 ): Promise<Collection<ConversationMessageModel>> {
   const db = dbInstance || (await getDatabase());
   return db.collection<ConversationMessageModel>(COLLECTIONS.CONVERSATION_MESSAGES);
+}
+
+export async function getChangeLogsCollection(
+  dbInstance?: Db
+): Promise<Collection<EventChangeLogModel>> {
+  const db = dbInstance || (await getDatabase());
+  return db.collection<EventChangeLogModel>(COLLECTIONS.CHANGE_LOGS);
 }
 
 /**
@@ -119,6 +128,12 @@ export async function ensureDatabaseIndexes(): Promise<{ success: boolean; creat
   const messages = await getConversationMessagesCollection(db);
   await messages.createIndex({ eventId: 1, ownerId: 1, createdAt: 1 });
   created.push("conversation_messages.eventId+ownerId+createdAt");
+
+  // 9. Change Logs (audit trail & version history)
+  const changeLogs = await getChangeLogsCollection(db);
+  await changeLogs.createIndex({ eventId: 1, version: -1 });
+  await changeLogs.createIndex({ ownerId: 1, timestamp: -1 });
+  created.push("change_logs.eventId+version", "change_logs.ownerId+timestamp");
 
   return { success: true, created };
 }
