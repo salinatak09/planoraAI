@@ -540,6 +540,7 @@ describe("Planora AI Change Impact & Replanning Suite", () => {
         userId: unauthorizedUserId.toString(),
         email: "intruder@planora.ai",
         name: "Intruder",
+        agency: "Text Agency",
         role: "organizer",
       });
 
@@ -561,6 +562,7 @@ describe("Planora AI Change Impact & Replanning Suite", () => {
         userId: ownerId.toString(),
         email: "aarav@planora.ai",
         name: "Aarav Sharma",
+        agency: "Text Agency",
         role: "organizer",
       });
 
@@ -603,6 +605,7 @@ describe("Planora AI Change Impact & Replanning Suite", () => {
         userId: ownerId.toString(),
         email: "aarav@planora.ai",
         name: "Aarav Sharma",
+        agency: "Text Agency",
         role: "organizer",
       });
 
@@ -635,6 +638,7 @@ describe("Planora AI Change Impact & Replanning Suite", () => {
         userId: ownerId.toString(),
         email: "aarav@planora.ai",
         name: "Aarav Sharma",
+        agency: "Text Agency",
         role: "organizer",
       });
 
@@ -711,6 +715,7 @@ describe("Planora AI Change Impact & Replanning Suite", () => {
         userId: ownerId.toString(),
         email: "aarav@planora.ai",
         name: "Aarav Sharma",
+        agency: "Text Agency",
         role: "organizer",
       });
 

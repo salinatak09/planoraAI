@@ -389,6 +389,7 @@ describe("Planora AI Conversational Assistant Suite", () => {
         userId: unauthorizedUserId.toString(),
         email: "intruder@planora.ai",
         name: "Intruder User",
+        agency: "Text Agency",
         role: "organizer",
       });
 
@@ -409,6 +410,7 @@ describe("Planora AI Conversational Assistant Suite", () => {
         userId: unauthorizedUserId.toString(),
         email: "intruder@planora.ai",
         name: "Intruder User",
+        agency: "Text Agency",
         role: "organizer",
       });
 
@@ -438,6 +440,7 @@ describe("Planora AI Conversational Assistant Suite", () => {
         userId: ownerId.toString(),
         email: "priya@planora.ai",
         name: "Priya Sharma",
+        agency: "Text Agency",
         role: "organizer",
       });
 
